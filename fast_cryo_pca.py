@@ -170,9 +170,11 @@ class FastPCA:
                     tld0 = time.time()
 
                     if self.flip_sign:
-                        imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                     else:
-                        imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = self.src.images[batch_start[l]+batch_start[l]+batch_size_list[l]].asnumpy()
 
                     tld1 = time.time()
                     self.t_load += tld1 - tld0
@@ -198,9 +200,11 @@ class FastPCA:
                     tld0 = time.time()
 
                     if self.flip_sign:
-                        imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                     else:
-                        imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
 
                     tld1 = time.time()
                     self.t_load += tld1 - tld0
@@ -252,9 +256,11 @@ class FastPCA:
             tld0 = time.time()
 
             if self.flip_sign:
-                imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
             else:
-                imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
 
             tld1 = time.time()
             self.t_load += tld1 - tld0
@@ -563,9 +569,11 @@ class FastPCA:
                         weights_k = k_batch_size_list[l] / denoise_idx_num[k]
 
                         if self.flip_sign:
-                            imgs_noise_l = -self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                            # imgs_noise_l = -self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                            imgs_noise_l = -self.src.images[k_batch_start[l]:k_batch_start[l]+k_batch_size_list[l]].asnumpy()
                         else:
-                            imgs_noise_l = self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                            # imgs_noise_l = self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                            imgs_noise_l = self.src.images[k_batch_start[l]:k_batch_start[l]+k_batch_size_list[l]].asnumpy()
 
                         if self.subtract_background:
                             _, std_l = estimate_bg(imgs_noise_l, bg_radius=self.bgRadius)
@@ -595,12 +603,16 @@ class FastPCA:
 
             for l in range(k_batch_num):
                 if return_error:
-                    imgs_clean_l = self.src.projections(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    # imgs_clean_l = self.src.projections(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    imgs_clean_l = self.src.projections[k_batch_start[l]:k_batch_start[l]+k_batch_size_list[l]].asnumpy()
 
                 if self.flip_sign:
-                    imgs_noise_l = -self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    # imgs_noise_l = -self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    imgs_noise_l = -self.src.images[k_batch_start[l]:k_batch_start[l]+k_batch_size_list[l]].asnumpy()
+
                 else:
-                    imgs_noise_l = self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    # imgs_noise_l = self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    imgs_noise_l = self.src.images[k_batch_start[l]:k_batch_start[l]+k_batch_size_list[l]].asnumpy()
                 h_idx_l = np.zeros(k_batch_size_list[l]).astype(int)
 
                 if self.subtract_background:
@@ -729,9 +741,11 @@ class FastPCA:
                         weights = batch_size_list[l] / num_imgs
 
                         if self.flip_sign:
-                            imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                            # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                            imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                         else:
-                            imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                            # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                            imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
 
                         if self.subtract_background:
                             _, std_l = estimate_bg(imgs_noise_l, bg_radius=self.bgRadius)
@@ -751,9 +765,11 @@ class FastPCA:
                 for l in range(0, batch_num):
 
                     if self.flip_sign:
-                        imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                     else:
-                        imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                     h_idx_l = h_idx[batch_start[l]:batch_start[l + 1]]
                     unique_val, unique_ind, unique_count = np.unique(h_idx_l, return_inverse=True,
                                                                      return_counts=True)
@@ -781,9 +797,11 @@ class FastPCA:
             weights = batch_size_list[l] / num_imgs
 
             if self.flip_sign:
-                imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
             else:
-                imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
 
             # tbe0 = time.time()
 

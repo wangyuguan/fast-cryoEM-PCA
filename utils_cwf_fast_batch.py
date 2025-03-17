@@ -85,9 +85,11 @@ def get_noise_var_batch(source, sn_ratio, batch_size):
 
 
     power_clean = 0
+    
 
     for k in range(0, batch_num):
-        imgs_ctf_clean_k = source.images(start=batch_start[k], num=batch_size_list[k])
+        # imgs_ctf_clean_k = source.images(start=batch_start[k], num=batch_size_list[k])
+        imgs_ctf_clean_k = source.images[batch_start[k]:batch_start[k]+batch_size_list[k]]
         power_clean += imgs_ctf_clean_k.norm() ** 2
 
     power_clean = power_clean / (num_imgs * (img_size ** 2))
@@ -109,7 +111,8 @@ def get_clean_mean_batch(source, basis, batch_size):
 
         print(f'drawing {l}-th batch of images')
         weights = batch_size_list[l] / num_imgs
-        imgs_clean_l = source.projections(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+#        imgs_clean_l = source.projections(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+        imgs_clean_l = source.projections[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
         coeffs_clean_eig_l = basis.evaluate_t(imgs_clean_l).reshape(batch_size_list[l], -1)
         coeffs_clean_l = basis.to_angular_order(coeffs_clean_eig_l.T).T
         mean_clean[blk_ind[0]:blk_ind[1]] += weights * np.mean(coeffs_clean_l[:, blk_ind[0]:blk_ind[1]], axis=0)
@@ -134,7 +137,8 @@ def get_clean_covar_batch(source, basis, mean_clean, batch_size, dtype):
     for l in range(0, batch_num):
         print(f'drawing {l}-th batch of images')
         weights = batch_size_list[l] / num_imgs
-        imgs_clean_l = source.projections(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+#        imgs_clean_l = source.projections(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+        imgs_clean_l = source.projections[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
         coeffs_clean_eig_l = basis.evaluate_t(imgs_clean_l).reshape(batch_size_list[l], -1)
         coeffs_clean_l = basis.to_angular_order(coeffs_clean_eig_l.T).T
         covar_clean += weights * get_sample_covar(mean_clean, coeffs_clean_l, basis, dtype)
