@@ -860,7 +860,7 @@ class FLEBasis2D:
         nn = 1 + 2 * nc
         ns = np.zeros((nn, nd), dtype=int, order="F")
         ks = np.zeros((nn, nd), dtype=int, order="F")
-        lmds = np.ones((nn, nd), dtype=self.dtype) * np.Inf
+        lmds = np.ones((nn, nd), dtype=self.dtype) * np.inf
 
         # load table of roots of jn (the scipy code has an issue where it gets
         # stuck in an infinite loop in Newton's method as of Jun 2022)
