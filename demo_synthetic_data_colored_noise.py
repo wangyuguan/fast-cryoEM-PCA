@@ -6,7 +6,7 @@ Demo Code for Fast PCA of Cryo-EM Images with colored noise
 import utils_cwf_fast_batch as utils
 import matplotlib.pyplot as plt
 import mrcfile
-from fle_2d_single import FLEBasis2D
+from fle_2d import FLEBasis2D
 from fast_cryo_pca import FastPCA
 import logging
 import os
@@ -15,6 +15,7 @@ import scipy.linalg as LA
 from aspire.source.simulation import Simulation
 from aspire.volume import Volume
 from aspire.operators import RadialCTFFilter, ArrayFilter
+from aspire.noise import CustomNoiseAdder
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,8 @@ psd_fun = lambda x: 1/(x * img_size / 20 + 1)  # specify noise psd as a radial f
 im_psd = psd_fun(rad_mat)
 mean_psd = np.mean(im_psd)
 im_psd = im_psd * noise_var0 / mean_psd  # adjust noise level to the specified SNR
-noise_filter = ArrayFilter(im_psd)
+# noise_filter = ArrayFilter(im_psd)
+noise_filter = CustomNoiseAdder(noise_filter = ArrayFilter(im_psd))
 
 # simulation source with CTF and noise (after determining noise var)
 
@@ -110,11 +112,12 @@ source = Simulation(
     offsets=0.0,
     amplitudes=1.0,
     dtype=dtype,
-    noise_filter=noise_filter,
+    # noise_filter=noise_filter,
+    noise_adder=noise_filter,
 )
 
 # Fourier-Bessel expansion object
-fle = FLEBasis2D(img_size, img_size, eps=eps, dtype=dtype)
+fle = FLEBasis2D(img_size, img_size, eps=eps)
 r = (fle.pts.reshape(1, -1)) * fle.h / np.pi
 # ground truth radial noise psd at sampled 1-D grid points
 radial_psd_gt = psd_fun(r) / mean_psd * noise_var0

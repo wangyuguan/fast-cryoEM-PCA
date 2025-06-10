@@ -24,8 +24,8 @@ class FastPCA:
     def _build(self):
 
         if self.basis is None:
-            from fle_2d_new import FLEBasis2D
-            self.basis = FLEBasis2D(self.src.L, self.src.L, eps=1e-3)
+            from fle_2d import FLEBasis2D
+            self.basis = FLEBasis2D(self.src.L, self.src.L, eps=1e-5)
 
         self.h_ctf = self.src.unique_filters
         self.h_idx = self.src.filter_indices
@@ -146,7 +146,7 @@ class FastPCA:
         else:
             if self.verbose:
                 logger.info(f"need to estimate the mean...")
-            self.mean_est = np.zeros((basis.ne,))
+            self.mean_est = np.zeros((basis.ne,),dtype=np.complex128)
 
         _, unique_count_all = np.unique(h_idx, return_counts=True)
         batch_start, batch_size_list, batch_num = get_batch_idx(num_imgs, self.batch_size)
@@ -170,9 +170,11 @@ class FastPCA:
                     tld0 = time.time()
 
                     if self.flip_sign:
-                        imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                     else:
-                        imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = self.src.images[batch_start[l]+batch_start[l]+batch_size_list[l]].asnumpy()
 
                     tld1 = time.time()
                     self.t_load += tld1 - tld0
@@ -198,9 +200,11 @@ class FastPCA:
                     tld0 = time.time()
 
                     if self.flip_sign:
-                        imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                     else:
-                        imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
 
                     tld1 = time.time()
                     self.t_load += tld1 - tld0
@@ -252,9 +256,11 @@ class FastPCA:
             tld0 = time.time()
 
             if self.flip_sign:
-                imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
             else:
-                imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
 
             tld1 = time.time()
             self.t_load += tld1 - tld0
@@ -321,7 +327,7 @@ class FastPCA:
                     else:
                         whiten_radial = 1 / np.sqrt(self.noise_psd)
 
-                    whiten_fb_eig = basis.expand_raidal_vec(whiten_radial)
+                    whiten_fb_eig = basis.expand_radial_vec(whiten_radial)
                     whiten_fb = basis.to_angular_order(whiten_fb_eig.T).T
 
                 else:
@@ -347,7 +353,7 @@ class FastPCA:
                     # whiten_radial = np.zeros((num_whiten, basis.pts.shape[0]))
                     whiten_radial = 1 / np.sqrt(radial_psd_df)
 
-                    whiten_fb_eig = basis.expand_raidal_vec(whiten_radial)
+                    whiten_fb_eig = basis.expand_radial_vec(whiten_radial)
                     whiten_fb = basis.to_angular_order(whiten_fb_eig.T).T
 
                 rwts_mat_l = whiten_fb * rwts_mat_l
@@ -430,7 +436,7 @@ class FastPCA:
                     else:
                         whiten_radial = 1 / np.sqrt(self.noise_psd)
 
-                    whiten_fb_eig = basis.expand_raidal_vec(whiten_radial)
+                    whiten_fb_eig = basis.expand_radial_vec(whiten_radial)
                     whiten_fb = basis.to_angular_order(whiten_fb_eig.T).T
                     rwts_mat_l = whiten_fb * rwts_mat_l
 
@@ -443,9 +449,9 @@ class FastPCA:
                 weights_l = weights_vec[ctf_batch_start[l]: ctf_batch_start[l + 1]]
                 mean_coeff_l = (rwts_mat_l0 ** 2) * self.mean_est[blk_ind[0]:blk_ind[1]]
                 b0_mean_l = b0_mean[ctf_batch_start[l]: ctf_batch_start[l + 1]]
-                B_mat[0] -= np.sum(mean_coeff_l[:, :, None] * b0_mean_l[:, None], axis=0)
-                B_mat[0] -= np.sum(b0_mean_l[:, :, None] * mean_coeff_l[:, None], axis=0)
-                B_mat[0] += np.sum((weights_l * mean_coeff_l)[:, :, None] * mean_coeff_l[:, None], axis=0)
+                B_mat[0] = B_mat[0] - np.sum(mean_coeff_l[:, :, None] * b0_mean_l[:, None], axis=0)
+                B_mat[0] = B_mat[0] - np.sum(b0_mean_l[:, :, None] * mean_coeff_l[:, None], axis=0)
+                B_mat[0] = B_mat[0] + np.sum((weights_l * mean_coeff_l)[:, :, None] * mean_coeff_l[:, None], axis=0)
                 t_cov1 = time.time()
                 self.t_cov_est += t_cov1 - t_cov0
 
@@ -563,9 +569,11 @@ class FastPCA:
                         weights_k = k_batch_size_list[l] / denoise_idx_num[k]
 
                         if self.flip_sign:
-                            imgs_noise_l = -self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                            # imgs_noise_l = -self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                            imgs_noise_l = -self.src.images[k_batch_start[l]:k_batch_start[l]+k_batch_size_list[l]].asnumpy()
                         else:
-                            imgs_noise_l = self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                            # imgs_noise_l = self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                            imgs_noise_l = self.src.images[k_batch_start[l]:k_batch_start[l]+k_batch_size_list[l]].asnumpy()
 
                         if self.subtract_background:
                             _, std_l = estimate_bg(imgs_noise_l, bg_radius=self.bgRadius)
@@ -595,12 +603,16 @@ class FastPCA:
 
             for l in range(k_batch_num):
                 if return_error:
-                    imgs_clean_l = self.src.projections(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    # imgs_clean_l = self.src.projections(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    imgs_clean_l = self.src.projections[k_batch_start[l]:k_batch_start[l]+k_batch_size_list[l]].asnumpy()
 
                 if self.flip_sign:
-                    imgs_noise_l = -self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    # imgs_noise_l = -self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    imgs_noise_l = -self.src.images[k_batch_start[l]:k_batch_start[l]+k_batch_size_list[l]].asnumpy()
+
                 else:
-                    imgs_noise_l = self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    # imgs_noise_l = self.src.images(start=k_batch_start[l], num=k_batch_size_list[l]).asnumpy()
+                    imgs_noise_l = self.src.images[k_batch_start[l]:k_batch_start[l]+k_batch_size_list[l]].asnumpy()
                 h_idx_l = np.zeros(k_batch_size_list[l]).astype(int)
 
                 if self.subtract_background:
@@ -645,7 +657,7 @@ class FastPCA:
 
                         whiten_radial = 1 / np.sqrt(np.mean(radial_psd_im, axis=0)).reshape(1, -1)
 
-                    whiten_fb_eig = basis.expand_raidal_vec(whiten_radial)
+                    whiten_fb_eig = basis.expand_radial_vec(whiten_radial)
                     whiten_fb = basis.to_angular_order(whiten_fb_eig.T).T
                     coeffs_l = whiten_fb * coeffs_l
                     rwts_mat_l = whiten_fb * rwts_mat_l
@@ -701,7 +713,7 @@ class FastPCA:
         return denoise_out
 
     def estimate_mean(self):
-        self.mean_est = np.zeros((self.basis.ne,))
+        self.mean_est = np.zeros((self.basis.ne,),dtype=np.complex128)
         basis = self.basis
         mean_num = 0
         mean_deno = 0
@@ -729,9 +741,11 @@ class FastPCA:
                         weights = batch_size_list[l] / num_imgs
 
                         if self.flip_sign:
-                            imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                            # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                            imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                         else:
-                            imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                            # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                            imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
 
                         if self.subtract_background:
                             _, std_l = estimate_bg(imgs_noise_l, bg_radius=self.bgRadius)
@@ -751,9 +765,11 @@ class FastPCA:
                 for l in range(0, batch_num):
 
                     if self.flip_sign:
-                        imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                     else:
-                        imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                        imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                     h_idx_l = h_idx[batch_start[l]:batch_start[l + 1]]
                     unique_val, unique_ind, unique_count = np.unique(h_idx_l, return_inverse=True,
                                                                      return_counts=True)
@@ -781,9 +797,11 @@ class FastPCA:
             weights = batch_size_list[l] / num_imgs
 
             if self.flip_sign:
-                imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                # imgs_noise_l = -self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
             else:
-                imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
+                imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
 
             # tbe0 = time.time()
 
@@ -831,7 +849,7 @@ class FastPCA:
                 # whiten_radial = np.zeros((num_whiten, basis.pts.shape[0]))
                 whiten_radial = 1 / np.sqrt(radial_psd_df)
 
-                whiten_fb_eig = basis.expand_raidal_vec(whiten_radial)
+                whiten_fb_eig = basis.expand_radial_vec(whiten_radial)
                 whiten_fb0 = (basis.to_angular_order(whiten_fb_eig.T))[blk_ind[0]:blk_ind[1]].T
 
                 rwts_mat_l0 = whiten_fb0 * rwts_mat_l0

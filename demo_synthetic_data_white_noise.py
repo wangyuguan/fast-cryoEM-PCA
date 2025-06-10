@@ -6,7 +6,7 @@ import utils_cwf_fast_batch as utils
 import matplotlib.pyplot as plt
 import mrcfile
 
-from fle_2d_single import FLEBasis2D
+from fle_2d import FLEBasis2D
 from fast_cryo_pca import FastPCA
 import logging
 import os
@@ -17,6 +17,7 @@ from aspire.source.simulation import Simulation
 from aspire.volume import Volume
 from aspire.operators import ScalarFilter
 from aspire.operators import RadialCTFFilter
+from aspire.noise import CustomNoiseAdder
 
 
 
@@ -94,7 +95,8 @@ source_ctf_clean = Simulation(
 noise_var = utils.get_noise_var_batch(source_ctf_clean, sn_ratio, batch_size)
 
 # create noise filter
-noise_filter = ScalarFilter(dim=2, value=noise_var)
+# noise_filter = ScalarFilter(dim=2, value=noise_var)
+noise_filter = CustomNoiseAdder(noise_filter = ScalarFilter(dim=2, value=noise_var))
 
 
 # create simulation object for noisy images
@@ -107,7 +109,8 @@ source = Simulation(
     offsets=0.0,
     amplitudes=1.0,
     dtype=dtype,
-    noise_filter=noise_filter,
+    # noise_filter=noise_filter,
+    noise_adder=noise_filter,
 )
 
 # Fourier-Bessel expansion object
