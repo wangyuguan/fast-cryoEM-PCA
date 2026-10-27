@@ -174,7 +174,7 @@ class FastPCA:
                         imgs_noise_l = -self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
                     else:
                         # imgs_noise_l = self.src.images(start=batch_start[l], num=batch_size_list[l]).asnumpy()
-                        imgs_noise_l = self.src.images[batch_start[l]+batch_start[l]+batch_size_list[l]].asnumpy()
+                        imgs_noise_l = self.src.images[batch_start[l]:batch_start[l]+batch_size_list[l]].asnumpy()
 
                     tld1 = time.time()
                     self.t_load += tld1 - tld0
